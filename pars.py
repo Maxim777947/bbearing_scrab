@@ -5,91 +5,126 @@ import pandas as pd
 from openpyxl import load_workbook
 from openpyxl.styles import PatternFill
 from func import httml_soup, source_link, next_page, price, price_min
-from selenium.webdriver.chrome.options import Options
-
 
 
 start = time.perf_counter()
+
 workbook = load_workbook('список.xlsx')
+
 sheet = workbook.active
-file_path = 'список.xlsx'  # Укажите путь к вашему файлу
+
+file_path = 'список.xlsx'
+
 df = pd.read_excel(file_path)
+
 pages_domen = 'https://autopiter.ru/'
+
+pages_domen = 'https://autopiter.ru/'
+
+mehanica = [30398, 32893]
+
 sheet['G1'] = 'ссылка'
 sheet['H1'] = 'Уточнено'
-workbook.save('список.xlsx')
-time.sleep(3)
-print('Начали')
-
-
-
-# Перебор всех строк
-for index, row in df.iterrows():
-    d =row.to_dict()
-    if pd.isna(d['ссылка']):
-        artlec = str(d['Артикул']).replace(' ', '%20').replace('/', '%2F').strip()
-        page = f'{pages_domen}goods/{artlec}'
-        soup = httml_soup(page)
-        ass = source_link(soup, d['Бренд'].strip(), str(d['Артикул']).strip())
-        if ass is None:
-            list_links = next_page(soup)
-            if list_links:
-                for i in list_links:
-                    print('Переходим к след странице по номеру')
-                    soup1 = httml_soup(pages_domen + i)
-                    ass = source_link(soup1, d['Бренд'], d['Артикул'])
-                    if ass:
-                        break
-        sheet['G' + str(index + 2)] = ass
-        str_log = f"{index + 2} добавление ссылки {ass} на подшипник бренда {d['Бренд']}, артикул {d['Артикул']}"
-        print(str_log)
-        workbook.save('список.xlsx')
 
 workbook.save('список.xlsx')
 
-# https://autopiter.ru/goods/NK%2020%2F20
-# https://autopiter.ru/goods/nk%2022%2F20
+print("Ведите:")
+print('1 - Запуск поиска ссылок на подшипники и запись их в таблицу Exel ')
+print('2 - Запуск поиска минимальной цены и запись в таблицу Exel' )
+f = int(input())
 
 
-browser = webdriver.Chrome()
 
 
+if f == 1:
+    print('Введите какое количество ссылок нужно создать?')
+    print('Нажмите просто Enter чтобы выполнить всё')
+    try:
+        counter = int(input())
+    except ValueError:
+        counter = None
 
+    s = 0
+    # Перебор всех строк в exel
+    for index, row in df.iterrows():
+        d =row.to_dict()
+        if pd.isna(d['ссылка']):
+            artlec = str(d['Артикул']).replace(' ', '%20').replace('/', '%2F').strip()
+            page = f'{pages_domen}goods/{artlec}'
+            soup = httml_soup(page)
+            #получаем ссылку на интересующий нас подшипник
+            ass = source_link(soup, d['Бренд'].strip(), str(d['Артикул']).strip())
+            if ass is None:
+                list_links = next_page(soup)
+                if list_links:
+                    for i in list_links:
+                        print('Переходим к след странице по номеру')
+                        soup1 = httml_soup(pages_domen + i)
+                        ass = source_link(soup1, d['Бренд'], d['Артикул'])
+                        if ass:
+                            break
+            if ass:
+                sheet['G' + str(index + 2)] = ass
+                str_log = f"{index + 2} добавление ссылки {ass} на подшипник бренда {d['Бренд']}, артикул {d['Артикул']}"
+                print(str_log)
+                s += 1
+        if index%5 == 0:
+            workbook.save('список.xlsx')
+        if counter:
+            if s == counter:
+                break
+    workbook.save('список.xlsx')
 
-new_price = None
-def start2():
-    print('НЕ ЗАБУДЬ РАЗВЕРНУТЬ КАРТОЧКУ ТОВАРА')
+elif f == 2:
+    print('Введите какое количество подшипников нужно проверить?')
+    print('Нажмите просто Enter чтобы выполнить всё')
+    try:
+        counter = int(input())
+    except ValueError:
+        counter = None
+    s = 0
+    browser = webdriver.Chrome()
+
+    for i in range(5):
+        print('НЕ ЗАБУДЬ РАЗВЕРНУТЬ КАРТОЧКУ ТОВАРА')
+
     for index, row in df.iterrows():
         d =row.to_dict()
         if pd.isna(d['Уточнено']):
             browser.get('https://autopiter.ru' + str(d['ссылка']))
             soup = BeautifulSoup(browser.page_source, "lxml")
-            print(index + 2)
             new_price = price(soup)
             price_m = price_min(soup, new_price)
             if new_price is None:
                 print('new_price = None нажми я не робот')
-                time.sleep(5)
-                new_price = price(soup)
+                time.sleep(3)
             if new_price is not None:
                 sheet['H' + str(index + 2)] = new_price
-            if price_m:
-                if price_m['priceId'] != 30398 or price_m['priceId'] != 32893:
-                    red_fill = PatternFill(start_color='FF0000', end_color='FF0000', fill_type='solid')
+                s += 1
+                print(index + 2, f'обновление цены на {new_price}')
+            if price_m and new_price:
+                if price_m['priceId'] not in mehanica:
+                    print('магазин не наш')
+                    red_fill = PatternFill(
+                        start_color='FF0000',
+                        end_color='FF0000',
+                        fill_type='solid'
+                        )
                     # Применяем заливку к ячейке
                     sheet['H' + str(index + 2)].fill = red_fill
-            print(index + 2, f'обновление цены на {new_price}')
-            new_price = None
+        if index%5 == 0:
+            workbook.save('список.xlsx')
+        new_price = None
+
+        if counter:
+            if s == counter:
+                break
+    workbook.save('список.xlsx')
+
+    browser.quit()
 
 
 
-start2()
-workbook.save('список.xlsx')
-start2()
-workbook.save('список.xlsx')
-
-
-browser.quit()
 finish = time.perf_counter()
 print('Время работы: ' + str(finish - start))
 
