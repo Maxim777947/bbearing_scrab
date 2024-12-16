@@ -5,8 +5,6 @@ from bs4 import BeautifulSoup
 
 
 
-
-
 def source_link(soup, brend: str, articul: str):
     '''Ищет ссылку на подшипник по артикулу и конкретному производителю'''
     brend = str(brend).lower()
@@ -74,22 +72,3 @@ def next_page(source_link):
         lambda x: x.get('href'), filter(lambda x: x != None, f)))
         )
     return f
-
-
-
-
-# import pandas as pd
-# from openpyxl import load_workbook
-
-
-# workbook = load_workbook('список.xlsx')
-# sheet = workbook.active
-# file_path = 'список.xlsx'
-
-# df = pd.read_excel(file_path)
-
-
-# for index, row in df.iterrows():
-#     d =row.to_dict()
-    
-    # print(type(d['Уточнено']))
