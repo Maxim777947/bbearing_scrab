@@ -72,4 +72,3 @@ def next_page(source_link):
         lambda x: x.get('href'), filter(lambda x: x != None, f)))
         )
     return f
-
