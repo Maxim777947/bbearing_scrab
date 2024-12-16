@@ -13,8 +13,8 @@ file_path = 'список.xlsx'
 
 sheet = workbook.active
 
-
 df = pd.read_excel(file_path)
+
 
 
 def pars_links():

@@ -8,10 +8,6 @@ from openpyxl.styles import PatternFill
 
 
 
-
-mehanica = [30398, 32893]
-
-
 workbook = load_workbook('список.xlsx')
 
 sheet = workbook.active
@@ -22,6 +18,7 @@ df = pd.read_excel(file_path)
 
 
 
+mehanica = [30398, 32893]
 
 def pars_price():
     print('Введите какое количество подшипников нужно проверить?')
