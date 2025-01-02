@@ -1,36 +1,75 @@
 import pandas as pd
+import asyncio
+import aiohttp
+import time
 from openpyxl import load_workbook
-
+from bs4 import BeautifulSoup
 from func import httml_soup, source_link, next_page
 
 
 
 pages_domen = 'https://autopiter.ru/'
 
-workbook = load_workbook('список.xlsx')
-
 file_path = 'список.xlsx'
 
-sheet = workbook.active
-
-df = pd.read_excel(file_path)
 
 
 
-def pars_links():
-    print('Введите какое количество ссылок нужно создать?')
-    print('Нажмите просто Enter чтобы выполнить всё')
+async def fetch(session, index, url, brend, art, semaphore):
+    async with semaphore:
+        async with session.get(url) as response:
+            html_content = await response.text()
+            soup = BeautifulSoup(html_content, 'html.parser')
+            ass = source_link(soup, brend, art)
+            ss = (index + 2, ass)
+            print(ss)
+            return ss                     
 
-    try:
-        counter = int(input())
-    except ValueError:
-        counter = None
 
-    sheet['G1'] = 'ссылка'
 
-    workbook.save('список.xlsx')
+async def parse_links():
 
-    s = 0
+    workbook = load_workbook('список.xlsx')
+
+    sheet = workbook.active
+
+    df = pd.read_excel(file_path)
+
+    semaphore = asyncio.Semaphore(5)
+
+    async with aiohttp.ClientSession() as session:
+        tasks = []
+        
+        for index, row in df.iterrows():
+            d = row.to_dict()
+            if pd.isna(d['ссылка']):
+                artlec = str(d['Артикул']).replace(' ', '%20').replace('/', '%2F').strip()
+                page = f'{pages_domen}goods/{artlec}'
+                tasks.append(fetch(session, index, page, d['Бренд'], d['Артикул'], semaphore))
+
+        # Выполняем все задачи асинхронно
+        responses = await asyncio.gather(*tasks)
+
+        # Обработка ответов
+        for i in responses:
+            if i[1]:
+                sheet['G' + str(i[0])] = i[1]
+                str_log = f"{i[0]} добавление ссылки {i[1]}"
+                print(str_log)
+
+        time.sleep(4)
+        workbook.save('список.xlsx')
+
+
+
+def pars_linksssss():
+
+    workbook = load_workbook('список.xlsx')
+
+    sheet = workbook.active
+
+    df = pd.read_excel(file_path)
+    
     # Перебор всех строк в exel
     for index, row in df.iterrows():
         d =row.to_dict()
@@ -53,11 +92,5 @@ def pars_links():
                 sheet['G' + str(index + 2)] = ass
                 str_log = f"{index + 2} добавление ссылки {ass} на подшипник бренда {d['Бренд']}, артикул {d['Артикул']}"
                 print(str_log)
-                s += 1
-        if index % 10 == 0:
-            workbook.save('список.xlsx')
-        if counter:
-            if s == counter:
-                break
 
     workbook.save('список.xlsx')
