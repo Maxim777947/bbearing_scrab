@@ -60,13 +60,12 @@ def pars_price():
                         )
                     # Применяем заливку к ячейке
                     sheet['H' + str(index + 2)].fill = red_fill
-        if index%5 == 0:
-            workbook.save('список.xlsx')
         new_price = None
 
         if counter:
             if s == counter:
                 break
+            
     workbook.save('список.xlsx')
 
     browser.quit()

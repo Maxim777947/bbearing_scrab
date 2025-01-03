@@ -7,12 +7,9 @@ from bs4 import BeautifulSoup
 from func import httml_soup, source_link, next_page
 
 
-
 pages_domen = 'https://autopiter.ru/'
 
 file_path = 'список.xlsx'
-
-
 
 
 async def fetch(session, index, url, brend, art, semaphore):
@@ -26,7 +23,6 @@ async def fetch(session, index, url, brend, art, semaphore):
             return ss                     
 
 
-
 async def parse_links():
 
     workbook = load_workbook('список.xlsx')
@@ -38,6 +34,7 @@ async def parse_links():
     semaphore = asyncio.Semaphore(10)
 
     async with aiohttp.ClientSession() as session:
+
         tasks = []
         
         for index, row in df.iterrows():
@@ -56,8 +53,7 @@ async def parse_links():
                 sheet['G' + str(i[0])] = i[1]
                 str_log = f"{i[0]} добавление ссылки {i[1]} в таблицу"
                 print(str_log)
-
-        time.sleep(4)
+        
         workbook.save('список.xlsx')
 
 
@@ -70,7 +66,6 @@ def pars_linksssss():
 
     df = pd.read_excel(file_path)
     
-    # Перебор всех строк в exel
     for index, row in df.iterrows():
         d =row.to_dict()
         if pd.isna(d['ссылка']):
