@@ -42,8 +42,6 @@ def price_min(soup, price):
     # Регулярное выражение для поиска JSON-объектов
     json_pattern = re.compile(r'\{.*?\}', re.DOTALL)
 
-    # Список для хранения найденных словарей
-
     # Извлекаем текст из тегов <script> и ищем словари
     for script in script_tags:
         if script.string:  # Проверяем, есть ли текст внутри тега <script>

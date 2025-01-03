@@ -22,7 +22,7 @@ async def fetch(session, index, url, brend, art, semaphore):
             soup = BeautifulSoup(html_content, 'html.parser')
             ass = source_link(soup, brend, art)
             ss = (index + 2, ass)
-            print(ss)
+            print(f"Найдена ссылка {ss}")
             return ss                     
 
 
@@ -35,7 +35,7 @@ async def parse_links():
 
     df = pd.read_excel(file_path)
 
-    semaphore = asyncio.Semaphore(5)
+    semaphore = asyncio.Semaphore(10)
 
     async with aiohttp.ClientSession() as session:
         tasks = []
@@ -54,7 +54,7 @@ async def parse_links():
         for i in responses:
             if i[1]:
                 sheet['G' + str(i[0])] = i[1]
-                str_log = f"{i[0]} добавление ссылки {i[1]}"
+                str_log = f"{i[0]} добавление ссылки {i[1]} в таблицу"
                 print(str_log)
 
         time.sleep(4)
