@@ -1,48 +1,52 @@
-import pandas as pd
 import asyncio
 import aiohttp
-import time
+import pandas as pd
 from openpyxl import load_workbook
 from bs4 import BeautifulSoup
 from func import httml_soup, source_link, next_page
 
 
-pages_domen = 'https://autopiter.ru/'
+PAGES_DOMEN = 'https://autopiter.ru/'
 
-file_path = 'список.xlsx'
+FILE_PATH = 'список.xlsx'
 
 
-async def fetch(session, index, url, brend, art, semaphore):
+async def fetch(session, d_dict, semaphore):
+    '''Функция ищет ссылку на подшипник'''
     async with semaphore:
-        async with session.get(url) as response:
+        async with session.get(d_dict['url']) as response:
             html_content = await response.text()
             soup = BeautifulSoup(html_content, 'html.parser')
-            ass = source_link(soup, brend, art)
-            ss = (index + 2, ass)
-            print(f"Найдена ссылка {ss}")
-            return ss                     
+            ass = source_link(soup, d_dict['brend'], d_dict['article'])
+            ss_tuple = (d_dict['index'] + 2, ass)
+            print(f"Найдена ссылка {ss_tuple}")
+            return ss_tuple
 
 
 async def parse_links():
-
+    '''1313'''
     workbook = load_workbook('список.xlsx')
 
     sheet = workbook.active
 
-    df = pd.read_excel(file_path)
+    df = pd.read_excel(FILE_PATH)
 
-    semaphore = asyncio.Semaphore(10)
+    semaphore = asyncio.Semaphore(5)
 
     async with aiohttp.ClientSession() as session:
-
         tasks = []
-        
         for index, row in df.iterrows():
             d = row.to_dict()
             if pd.isna(d['ссылка']):
                 artlec = str(d['Артикул']).replace(' ', '%20').replace('/', '%2F').strip()
-                page = f'{pages_domen}goods/{artlec}'
-                tasks.append(fetch(session, index, page, d['Бренд'], d['Артикул'], semaphore))
+                url = f'{PAGES_DOMEN}goods/{artlec}'
+                d_dict = {
+                    'index': index,
+                    'url': url,
+                    'brend': d['Бренд'],
+                    'article': d['Артикул'],
+                }
+                tasks.append(fetch(session, d_dict, semaphore))
 
         # Выполняем все задачи асинхронно
         responses = await asyncio.gather(*tasks)
@@ -53,39 +57,36 @@ async def parse_links():
                 sheet['G' + str(i[0])] = i[1]
                 str_log = f"{i[0]} добавление ссылки {i[1]} в таблицу"
                 print(str_log)
-        
         workbook.save('список.xlsx')
 
 
-
 def pars_linksssss():
-
+    '''Функция доробатывает за parse_links'''
     workbook = load_workbook('список.xlsx')
 
     sheet = workbook.active
 
-    df = pd.read_excel(file_path)
-    
+    df = pd.read_excel(FILE_PATH)
     for index, row in df.iterrows():
         d =row.to_dict()
         if pd.isna(d['ссылка']):
             artlec = str(d['Артикул']).replace(' ', '%20').replace('/', '%2F').strip()
-            page = f'{pages_domen}goods/{artlec}'
+            page = f'{PAGES_DOMEN}goods/{artlec}'
             soup = httml_soup(page)
             #получаем ссылку на интересующий нас подшипник
             ass = source_link(soup, d['Бренд'].strip(), str(d['Артикул']).strip())
-            if ass is None:
-                list_links = next_page(soup)
-                if list_links:
-                    for i in list_links:
-                        print('Переходим к след странице по номеру')
-                        soup1 = httml_soup(pages_domen + i)
-                        ass = source_link(soup1, d['Бренд'], d['Артикул'])
-                        if ass:
-                            break
+            list_links = next_page(soup)
+            if ass is None and list_links:
+                for i in list_links:
+                    print('Переходим к след странице по номеру')
+                    soup1 = httml_soup(PAGES_DOMEN + i)
+                    ass = source_link(soup1, d['Бренд'], d['Артикул'])
+                    if ass:
+                        break
             if ass:
                 sheet['G' + str(index + 2)] = ass
-                str_log = f"{index + 2} добавление ссылки {ass} на подшипник бренда {d['Бренд']}, артикул {d['Артикул']}"
+                str_log = (f"{index + 2} добавление ссылки "
+                          f"{ass} на подшипник бренда "
+                          f"{d['Бренд']}, артикул {d['Артикул']}")
                 print(str_log)
-
     workbook.save('список.xlsx')

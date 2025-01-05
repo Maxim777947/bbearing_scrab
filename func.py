@@ -12,22 +12,27 @@ def source_link(soup, brend: str, articul: str):
         brend = 'kitaj'
     symbols_to_replace = r"[- /*.]"
     new_articul = re.sub(symbols_to_replace, '', str(articul)).lower().strip(' ')
-    
     links = soup.find_all('a')
     urls = [link.get('href') for link in links if link.get('href') is not None]
     for url in urls:
         s = f'{new_articul}/{brend}'
         if s in url:
             return url
+    return None
 
 
 def price(soup):
+    '''Функция ищет минимальную цену на странице или её отсутствие'''
     offer_label = soup.find('span', class_='SelectedOffer__label___3S5Tc', text='Самый дешевый')
-    label = soup.find(class_='Notice__inner___3us-1', text='Предложений по запрошенному номеру не найдено')
+    label = soup.find(
+        class_='Notice__inner___3us-1',
+        text='Предложений по запрошенному номеру не найдено'
+        )
     if offer_label:
         price_div = offer_label.find_next('div', {'class': 'SelectedOffer__price___3KQqQ'})
         if price_div:
-            price_value = int(''.join(price_div.text.strip().split(' ')).strip('\xa0₽')) # Извлекаем только числовое значение
+            # Извлекаем только числовое значение
+            price_value = int(''.join(price_div.text.strip().split(' ')).strip('\xa0₽'))
             return price_value
     elif label:
         return 'Предложений по запрошенному номеру не найдено'
@@ -35,6 +40,7 @@ def price(soup):
 
 
 def price_min(soup, price):
+    '''Функция ищет первого продавца в таблице'''
     script_tags = soup.find_all('script')
 
     # Регулярное выражение для поиска JSON-объектов
@@ -52,9 +58,11 @@ def price_min(soup, price):
                         return dictionary
                 except json.JSONDecodeError:
                     continue  # Игнорируем ошибки декодирования
+    return None
 
 
 def httml_soup(link: str):
+    '''Функция возвращает обьект объект BeautifulSoup'''
     response = requests.get(link)
     html_content = response.text
     soup = BeautifulSoup(html_content, 'html.parser')
@@ -66,8 +74,7 @@ def next_page(source_link):
     f = [source_link.find(
         class_='Pagination__page___1ykxs', text=i) for i in range(0, 100)
         ]
-    f = list(filter(lambda x: x!=None, map(
-        lambda x: x.get('href'), filter(lambda x: x != None, f)))
+    f = list(filter(lambda x: x is not None, map(
+        lambda x: x.get('href'), filter(lambda x: x is not None, f)))
         )
     return f
-
