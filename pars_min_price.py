@@ -1,10 +1,11 @@
 import time
 import pandas as pd
 from bs4 import BeautifulSoup
+from openpyxl.styles import PatternFill
 from openpyxl import load_workbook
 from selenium import webdriver
 from func import price, price_min
-from openpyxl.styles import PatternFill
+
 
 
 
@@ -12,15 +13,16 @@ workbook = load_workbook('список.xlsx')
 
 sheet = workbook.active
 
-file_path = 'список.xlsx'
+FILE_PATH = 'список.xlsx'
 
-df = pd.read_excel(file_path)
+df = pd.read_excel(FILE_PATH)
 
 
 
 mehanica = [30398, 32893]
 
 def pars_price():
+    '''Основная функция парсит цены и вносит их в таблицу'''
     print('Введите какое количество подшипников нужно проверить?')
     print('Нажмите просто Enter чтобы выполнить всё')
     try:
@@ -65,7 +67,6 @@ def pars_price():
         if counter:
             if s == counter:
                 break
-            
     workbook.save('список.xlsx')
 
     browser.quit()
