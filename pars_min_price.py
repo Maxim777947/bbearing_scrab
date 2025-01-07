@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup
 from openpyxl.styles import PatternFill
 from openpyxl import load_workbook
 from selenium import webdriver
-from func import price, price_min
+from func import source_price, price_min
 
 
 
@@ -35,7 +35,7 @@ def pars_price():
 
     browser = webdriver.Chrome()
 
-    for i in range(5):
+    for _ in range(5):
         print('НЕ ЗАБУДЬ РАЗВЕРНУТЬ КАРТОЧКУ ТОВАРА')
 
     for index, row in df.iterrows():
@@ -43,7 +43,7 @@ def pars_price():
         if pd.isna(d['Уточнено']):
             browser.get('https://autopiter.ru' + str(d['ссылка']))
             soup = BeautifulSoup(browser.page_source, "lxml")
-            new_price = price(soup)
+            new_price = source_price(soup)
             price_m = price_min(soup, new_price)
             if new_price is None:
                 print('new_price = None нажми я не робот')

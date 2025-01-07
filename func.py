@@ -21,7 +21,7 @@ def source_link(soup, brend: str, articul: str):
     return None
 
 
-def price(soup):
+def source_price(soup):
     '''Функция ищет минимальную цену на странице или её отсутствие'''
     offer_label = soup.find('span', class_='SelectedOffer__label___3S5Tc', text='Самый дешевый')
     label = soup.find(
@@ -61,17 +61,23 @@ def price_min(soup, price):
     return None
 
 
-def httml_soup(link: str):
-    '''Функция возвращает обьект объект BeautifulSoup'''
-    response = requests.get(link)
-    html_content = response.text
-    soup = BeautifulSoup(html_content, 'html.parser')
-    return soup
+def httml_soup(link: str, timeout: int = 10):
+    '''Функция возвращает объект BeautifulSoup'''
+    try:
+        response = requests.get(link, timeout=timeout)
+        response.raise_for_status()  # Вызывает HTTPError для плохих ответов
+        html_content = response.text
+        soup = BeautifulSoup(html_content, 'html.parser')
+        return soup
+    except requests.exceptions.Timeout:
+        print(f"Запрос к {link} истек по времени после {timeout} секунд.")
+    except requests.exceptions.RequestException as e:
+        print(f"Произошла ошибка: {e}")
 
 
-def next_page(source_link):
+def next_page(source_links):
     ''' функция выбирает все ссылки следующие по номеру кроме действующей'''
-    f = [source_link.find(
+    f = [source_links.find(
         class_='Pagination__page___1ykxs', text=i) for i in range(0, 100)
         ]
     f = list(filter(lambda x: x is not None, map(
