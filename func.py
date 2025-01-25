@@ -3,14 +3,36 @@ import json
 import requests
 from bs4 import BeautifulSoup
 
+def replace_article(article):
+    artlec = str(article
+                    ).lower(
+                    ).replace(' ', '%20'
+                    ).replace('/', '%2F'
+                    ).replace(',', '%2C'
+                    ).replace('шсп', '%2C'
+                    ).strip()
+                
+    return artlec
+    
+def replace_brend(brend):
+    brend = str(brend
+                ).lower(
+                ).replace('китай', 'kitaj'
+                ).replace('россия', 'rossiya'
+                ).replace('app-group', 'app-grupp'
+                ).replace('спз', 'spz'
+                ).replace('гпз', 'gpz'
+                ).replace('л', 'l'
+                ).replace('к', 'k'
+                ).replace('м', 'm'
+                )
+    return brend
 
 
 def source_link(soup, brend: str, articul: str):
     '''Ищет ссылку на подшипник по артикулу и конкретному производителю'''
-    brend = str(brend).lower()
-    if brend == 'китай':
-        brend = 'kitaj'
-    symbols_to_replace = r"[- /*.]"
+    brend = replace_brend(brend)
+    symbols_to_replace = r"[- /*.,]"
     new_articul = re.sub(symbols_to_replace, '', str(articul)).lower().strip(' ')
     links = soup.find_all('a')
     urls = [link.get('href') for link in links if link.get('href') is not None]
@@ -84,3 +106,4 @@ def next_page(source_links):
         lambda x: x.get('href'), filter(lambda x: x is not None, f)))
         )
     return f
+

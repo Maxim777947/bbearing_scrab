@@ -40,7 +40,7 @@ def pars_price():
 
     for index, row in df.iterrows():
         d =row.to_dict()
-        if pd.isna(d['Уточнено']):
+        if pd.isna(d['Уточнено']) and pd.notna(d['ссылка']):
             browser.get('https://autopiter.ru' + str(d['ссылка']))
             soup = BeautifulSoup(browser.page_source, "lxml")
             new_price = source_price(soup)
