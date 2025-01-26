@@ -23,7 +23,7 @@ async def fetch(session, d_dict, semaphore):
             return ss_tuple
 
 
-async def parse_links(counter=None):
+async def parse_links(counter=None, filter=False):
     '''1313'''
     workbook = load_workbook('список.xlsx')
 
@@ -38,13 +38,17 @@ async def parse_links(counter=None):
         s = 0
         for index, row in df.iterrows():
             d = row.to_dict()
+            brend = str(d['Бренд']).title()
             if pd.isna(d['ссылка']):
                 artlec = replace_article(d['Артикул'])
-                url = f'{PAGES_DOMEN}goods/{artlec}'
+                if filter:
+                    url = f'{PAGES_DOMEN}goods/{artlec}?filteredBrands%5B0%5D={brend}'
+                else:
+                    url = f'{PAGES_DOMEN}goods/{artlec}'
                 d_dict = {
                     'index': index,
                     'url': url,
-                    'brend': d['Бренд'],
+                    'brend': brend,
                     'article': d['Артикул'],
                 }
                 tasks.append(fetch(session, d_dict, semaphore))

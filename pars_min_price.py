@@ -43,16 +43,24 @@ def pars_price():
         if pd.isna(d['Уточнено']) and pd.notna(d['ссылка']):
             browser.get('https://autopiter.ru' + str(d['ссылка']))
             soup = BeautifulSoup(browser.page_source, "lxml")
-            new_price = source_price(soup)
-            price_m = price_min(soup, new_price)
-            if new_price is None:
-                print('new_price = None нажми я не робот')
-                time.sleep(3)
-            if new_price is not None:
-                sheet['H' + str(index + 2)] = new_price
+            min_price = source_price(soup)
+            price_m = price_min(soup, min_price)
+            if min_price is None:
+                print('min_price = None нажми я не робот')
+                time.sleep(2)
+            if min_price is not None:
+                sheet['H' + str(index + 2)] = min_price
                 s += 1
-                print(index + 2, f'обновление цены на {new_price}')
-            if price_m and new_price:
+                print(index + 2, f'обновление цены на {min_price}')
+            if min_price == 'Предложений по запрошенному номеру не найдено':
+                yellow_fill = PatternFill(
+                        start_color='FFD700',
+                        end_color='FFD700',
+                        fill_type='solid'
+                        )
+                # Применяем заливку к ячейке
+                sheet['H' + str(index + 2)].fill = yellow_fill
+            if price_m and min_price:
                 if price_m['priceId'] not in mehanica:
                     print('магазин не наш')
                     red_fill = PatternFill(
@@ -62,7 +70,7 @@ def pars_price():
                         )
                     # Применяем заливку к ячейке
                     sheet['H' + str(index + 2)].fill = red_fill
-        new_price = None
+        min_price = None
 
         if counter:
             if s == counter:

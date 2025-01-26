@@ -14,9 +14,12 @@ def replace_article(article):
                 
     return artlec
     
+    
 def replace_brend(brend):
     brend = str(brend
                 ).lower(
+                ).replace('вмпавто', 'vmpavto'
+                ).replace('сервис-ключ', 'servis-klyuch'
                 ).replace('китай', 'kitaj'
                 ).replace('россия', 'rossiya'
                 ).replace('app-group', 'app-grupp'
@@ -25,15 +28,36 @@ def replace_brend(brend):
                 ).replace('л', 'l'
                 ).replace('к', 'k'
                 ).replace('м', 'm'
+                ).strip(' '
                 )
     return brend
+
+
+def replace_article_url(article):
+    ''' Функция для формироватия артикля в url '''
+    symbols_to_replace = r"[- /*.,()]"
+    new_articul = re.sub(symbols_to_replace, '', str(article)).lower().strip(' ')
+
+    artlec = new_articul.lower(
+                    ).replace('шсп', 'scp'
+                    ).replace('шсл', 'scl'
+                    ).replace('л', 'l'
+                    ).replace('е', 'e'
+                    ).replace('а', 'a'
+                    ).replace('м', 'm'
+                    ).replace('с', 'c'
+                    ).strip()
+                
+    return artlec
 
 
 def source_link(soup, brend: str, articul: str):
     '''Ищет ссылку на подшипник по артикулу и конкретному производителю'''
     brend = replace_brend(brend)
-    symbols_to_replace = r"[- /*.,]"
-    new_articul = re.sub(symbols_to_replace, '', str(articul)).lower().strip(' ')
+    # symbols_to_replace = r"[- /*.,()]"
+    new_articul = replace_article_url(articul)
+    # print(new_articul)
+    # print(brend)
     links = soup.find_all('a')
     urls = [link.get('href') for link in links if link.get('href') is not None]
     for url in urls:
@@ -47,7 +71,7 @@ def source_price(soup):
     '''Функция ищет минимальную цену на странице или её отсутствие'''
     offer_label = soup.find('span', class_='SelectedOffer__label___3S5Tc', text='Самый дешевый')
     label = soup.find(
-        class_='Notice__inner___3us-1',
+        class_='NonRetailAppraisePricesTab__notice___3_Psa',
         text='Предложений по запрошенному номеру не найдено'
         )
     if offer_label:
@@ -106,4 +130,3 @@ def next_page(source_links):
         lambda x: x.get('href'), filter(lambda x: x is not None, f)))
         )
     return f
-
